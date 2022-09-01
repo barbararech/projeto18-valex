@@ -7,3 +7,7 @@ export const addCardSchema = joi.object({
     .required(),
 });
 
+export const activateCardSchema = joi.object({
+  password: joi.string().length(4).required(),
+  securityCode: joi.string().length(3).required()
+});

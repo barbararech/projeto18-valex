@@ -7,6 +7,7 @@ import { formatName } from "../utils/formatCardholderName.js";
 import { faker } from "@faker-js/faker";
 import moment from "moment";
 import Cryptr from "cryptr";
+import bcrypt from "bcryptjs";
 
 export async function newCard(
   employeeId: number,
@@ -15,15 +16,15 @@ export async function newCard(
 ) {
   const company = await companyServices.findCompany(companyKey);
   const employee = await employeeServices.findEmployee(employeeId);
- 
+
   await findEmployeeCardByType(type, employeeId);
 
-  const newCard = await cardData(company, employee, type);
+  const newCard = await newCardData(company, employee, type);
 
   return;
 }
 
-export async function cardData(
+export async function newCardData(
   company: companyRepository.Company,
   employee: employeeRepository.Employee,
   type: cardRepository.TransactionTypes
@@ -57,6 +58,48 @@ export async function cardData(
   return;
 }
 
+export async function activateCard(
+  cardId: number,
+  securityCode: number,
+  password: string
+) {
+  const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
+  const passwordCrypt = bcrypt.hashSync(password, 10);
+  const dateNow = moment().format("MM/YYYY");
+
+  const card = await findCardById(cardId);
+
+  const verifySecurityCode = Number(cryptr.decrypt(card.securityCode));
+
+  if (securityCode != verifySecurityCode) {
+    throw {
+      status: 401,
+      message: "Permissão negada!",
+    };
+  }
+
+  if (card.password) {
+    throw {
+      status: 403,
+      message: "Esse cartão já está ativado!",
+    };
+  }
+
+  if (card.expirationDate < dateNow) {
+    throw {
+      status: 403,
+      message: "Esse cartão expirou!",
+    };
+  }
+
+  const cardData = {
+    password: passwordCrypt,
+  };
+
+  await cardRepository.update(cardId, cardData);
+  return;
+}
+
 export async function findEmployeeCardByType(
   type: cardRepository.TransactionTypes,
   employeeId: number
@@ -73,4 +116,17 @@ export async function findEmployeeCardByType(
     };
   }
   return;
+}
+
+export async function findCardById(cardId: number) {
+  const card = await cardRepository.findById(cardId);
+
+  if (!card) {
+    throw {
+      status: 400,
+      message: "Esse cartão não existe!",
+    };
+  }
+
+  return card;
 }
