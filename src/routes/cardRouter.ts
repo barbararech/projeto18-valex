@@ -4,7 +4,6 @@ import { authValidationMiddleware } from "../middlewares/authValidationMiddlewar
 import * as cardController from "../controllers/cardController.js";
 import * as cardSchemas from "../schemas/cardSchemas.js";
 
-
 const router = Router();
 
 router.post(
@@ -24,5 +23,7 @@ router.get(
   middleware(cardSchemas.viewCardSchema),
   cardController.viewCard
 );
+
+router.get("/viewtransactions/:cardid", cardController.viewTransactions);
 
 export default router;

@@ -26,3 +26,10 @@ export async function viewCard(req: Request, res: Response) {
   const cards = { cards: card };
   return res.status(200).send(cards);
 }
+
+export async function viewTransactions(req: Request, res: Response) {
+  const cardId = Number(req.params.cardid);
+
+  const cardTransactions = await cardServices.viewTransactions(cardId);
+  return res.status(200).send(cardTransactions);
+}

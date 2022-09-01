@@ -1,9 +1,12 @@
 import * as cardRepository from "../repositories/cardRepository.js";
 import * as companyRepository from "../repositories/companyRepository.js";
 import * as employeeRepository from "../repositories/employeeRepository.js";
+import * as paymentRepository from "../repositories/paymentRepository.js";
+import * as rechargeRepository from "../repositories/rechargeRepository.js";
 import * as companyServices from "../services/companyServices.js";
 import * as employeeServices from "../services/employeeServices.js";
-import { formatName } from "../utils/formatCardholderName.js";
+import { formatName } from "../utils/formatCardholderNameUtils.js";
+import { calcBalance } from "../utils/calcBalanceUtils.js";
 import { faker } from "@faker-js/faker";
 import moment from "moment";
 import Cryptr from "cryptr";
@@ -70,7 +73,7 @@ export async function activateCard(
   const card = await findCardById(cardId);
 
   const verifySecurityCode = Number(cryptr.decrypt(card.securityCode));
-  console.log(verifySecurityCode)
+  console.log(verifySecurityCode);
 
   if (securityCode != verifySecurityCode) {
     throw {
@@ -99,6 +102,50 @@ export async function activateCard(
 
   await cardRepository.update(cardId, cardData);
   return;
+}
+
+export async function viewCard(cardId: number, password: string) {
+  const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
+  const card = await findCardById(cardId);
+
+  if (!card.password) {
+    throw {
+      status: 403,
+      message: "Esse cartão não foi ativado!",
+    };
+  }
+
+  const checkPassword = bcrypt.compareSync(password, card.password);
+
+  if (!checkPassword) {
+    throw {
+      status: 401,
+      message: "Permissão negada!",
+    };
+  }
+
+  let filteredCard = await cardRepository.viewCardDetails(cardId);
+  const securityCode = cryptr.decrypt(filteredCard.securityCode);
+  filteredCard["securityCode"] = securityCode;
+
+  return [filteredCard];
+}
+
+export async function viewTransactions(cardId: number) {
+  const card = await findCardById(cardId);
+
+  const recharges = await rechargeRepository.findByCardId(cardId);
+  const payments = await paymentRepository.findByCardId(cardId);
+
+  const balance = await calcBalance(recharges, payments);
+
+  const transactions = {
+    balance,
+    payments,
+    recharges,
+  };
+
+  return transactions;
 }
 
 export async function findEmployeeCardByType(
@@ -130,33 +177,4 @@ export async function findCardById(cardId: number) {
   }
 
   return card;
-}
-
-export async function viewCard(cardId: number, password: string) {
-  const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
-  const card = await findCardById(cardId);
-
-  if (!card.password) {
-    throw {
-      status: 403,
-      message: "Esse cartão não foi ativado!",
-    };
-  }
-
-  const checkPassword = bcrypt.compareSync(password, card.password);
-
-  if (!checkPassword) {
-    throw {
-      status: 401,
-      message: "Permissão negada!",
-    };
-  }
-
-  
-
-  let filteredCard = await cardRepository.viewCardDetails(cardId);
-  const securityCode = cryptr.decrypt(filteredCard.securityCode);
-  filteredCard["securityCode"] = securityCode;
-
-  return [filteredCard];
 }
