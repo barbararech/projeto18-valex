@@ -70,6 +70,7 @@ export async function activateCard(
   const card = await findCardById(cardId);
 
   const verifySecurityCode = Number(cryptr.decrypt(card.securityCode));
+  console.log(verifySecurityCode)
 
   if (securityCode != verifySecurityCode) {
     throw {
@@ -129,4 +130,33 @@ export async function findCardById(cardId: number) {
   }
 
   return card;
+}
+
+export async function viewCard(cardId: number, password: string) {
+  const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
+  const card = await findCardById(cardId);
+
+  if (!card.password) {
+    throw {
+      status: 403,
+      message: "Esse cartão não foi ativado!",
+    };
+  }
+
+  const checkPassword = bcrypt.compareSync(password, card.password);
+
+  if (!checkPassword) {
+    throw {
+      status: 401,
+      message: "Permissão negada!",
+    };
+  }
+
+  
+
+  let filteredCard = await cardRepository.viewCardDetails(cardId);
+  const securityCode = cryptr.decrypt(filteredCard.securityCode);
+  filteredCard["securityCode"] = securityCode;
+
+  return [filteredCard];
 }

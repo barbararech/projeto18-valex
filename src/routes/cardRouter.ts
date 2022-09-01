@@ -1,21 +1,28 @@
 import { Router } from "express";
-import { activateCard, newCard } from "../controllers/cardController.js";
 import { middleware } from "../middlewares/schemasValidationMiddleware.js";
-import * as cardSchemas from "../schemas/cardSchemas.js";
 import { authValidationMiddleware } from "../middlewares/authValidationMiddleware.js";
+import * as cardController from "../controllers/cardController.js";
+import * as cardSchemas from "../schemas/cardSchemas.js";
+
 
 const router = Router();
 
 router.post(
-  "/newcard/:employeeid",
+  "/newcards/:employeeid",
   authValidationMiddleware,
   middleware(cardSchemas.addCardSchema),
-  newCard
+  cardController.newCard
 );
 router.put(
-  "/activatecard/:cardid",
+  "/activatecards/:cardid",
   middleware(cardSchemas.activateCardSchema),
-  activateCard
+  cardController.activateCard
+);
+
+router.get(
+  "/viewcards/:cardid",
+  middleware(cardSchemas.viewCardSchema),
+  cardController.viewCard
 );
 
 export default router;

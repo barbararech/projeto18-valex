@@ -67,6 +67,23 @@ export async function findByCardDetails(
   return result.rows[0];
 }
 
+export async function viewCardDetails(
+  id: number,
+) {
+  const result = await connection.query<Card, [number]>(
+    ` SELECT 
+        "number", 
+        "cardholderName", 
+        "expirationDate",
+        "securityCode"
+      FROM cards 
+      WHERE id=$1`,
+    [id]
+  );
+
+  return result.rows[0];
+}
+
 export async function insert(cardData: CardInsertData) {
   const {
     employeeId,
