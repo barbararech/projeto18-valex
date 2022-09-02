@@ -15,7 +15,7 @@ export async function activateCard(req: Request, res: Response) {
   const cardId = Number(req.params.cardid);
 
   await cardServices.activateCard(cardId, securityCode, password);
-  return res.sendStatus(201);
+  return res.sendStatus(200);
 }
 
 export async function viewCard(req: Request, res: Response) {
@@ -32,4 +32,12 @@ export async function viewTransactions(req: Request, res: Response) {
 
   const cardTransactions = await cardServices.viewTransactions(cardId);
   return res.status(200).send(cardTransactions);
+}
+
+export async function blockCard(req: Request, res: Response) {
+  const { password } = req.body;
+  const cardId = Number(req.params.cardid);
+
+  await cardServices.blockCard(cardId, password);
+  return res.sendStatus(200);
 }

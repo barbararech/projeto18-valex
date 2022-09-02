@@ -111,7 +111,7 @@ export async function viewCard(cardId: number, password: string) {
   if (!card.password) {
     throw {
       status: 403,
-      message: "Esse cartão não foi ativado!",
+      message: "Esse cartão não está ativado!",
     };
   }
 
@@ -146,6 +146,41 @@ export async function viewTransactions(cardId: number) {
   };
 
   return transactions;
+}
+
+export async function blockCard(cardId: number, password: string) {
+  const dateNow = moment().format("MM/YYYY");
+
+  const card = await findCardById(cardId);
+  const checkPassword = bcrypt.compareSync(password, card.password);
+
+  if (!checkPassword) {
+    throw {
+      status: 401,
+      message: "Permissão negada!",
+    };
+  }
+
+  if (card.expirationDate < dateNow) {
+    throw {
+      status: 403,
+      message: "Esse cartão expirou!",
+    };
+  }
+
+  if (card.isBlocked) {
+    throw {
+      status: 403,
+      message: "Esse cartão já está bloqueado!",
+    };
+  }
+
+  const cardData = {
+    isBlocked: true,
+  };
+
+  await cardRepository.update(cardId, cardData);
+  return;
 }
 
 export async function findEmployeeCardByType(

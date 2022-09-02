@@ -4,7 +4,7 @@ export async function findCompany(companyKey: string) {
   const company = await companyRepository.findByApiKey(companyKey);
 
   if (!company) {
-    throw { status: 401, message: "Esse empregado não está cadastrado!" };
+    throw { status: 401, message: "Esta empresa não está cadastrada!" };
   }
 
   return company;

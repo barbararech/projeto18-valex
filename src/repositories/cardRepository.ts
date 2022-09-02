@@ -67,9 +67,7 @@ export async function findByCardDetails(
   return result.rows[0];
 }
 
-export async function viewCardDetails(
-  id: number,
-) {
+export async function viewCardDetails(id: number) {
   const result = await connection.query<Card, [number]>(
     ` SELECT 
         "number", 

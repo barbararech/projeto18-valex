@@ -1,7 +1,7 @@
 import express, { json } from "express";
 import cors from "cors";
 import "express-async-errors";
-import errorHandlerMiddleware from './middlewares/errorHandlerMiddleware.js'
+import errorHandlerMiddleware from "./middlewares/errorHandlerMiddleware.js";
 
 import cardRouter from "./routes/cardRouter.js";
 

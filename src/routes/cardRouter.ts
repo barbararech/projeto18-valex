@@ -26,4 +26,11 @@ router.get(
 
 router.get("/viewtransactions/:cardid", cardController.viewTransactions);
 
+router.put(
+  "/blockcards/:cardid",
+  middleware(cardSchemas.viewCardSchema),
+  cardController.blockCard
+);
+
+
 export default router;
