@@ -5,6 +5,7 @@ import * as paymentRepository from "../repositories/paymentRepository.js";
 import * as rechargeRepository from "../repositories/rechargeRepository.js";
 import * as companyServices from "../services/companyServices.js";
 import * as employeeServices from "../services/employeeServices.js";
+import * as verifyCardUtils from "../utils/verifyCardUtils.js";
 import { formatName } from "../utils/formatCardholderNameUtils.js";
 import { calcBalance } from "../utils/calcBalanceUtils.js";
 import { faker } from "@faker-js/faker";
@@ -22,7 +23,7 @@ export async function newCard(
 
   await findEmployeeCardByType(type, employeeId);
 
-  const newCard = await newCardData(company, employee, type);
+  await newCardData(company, employee, type);
 
   return;
 }
@@ -33,6 +34,7 @@ export async function newCardData(
   type: cardRepository.TransactionTypes
 ) {
   const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
+  const securityCode = cryptr.encrypt(faker.random.numeric(3));
 
   const cardNumber = faker.random.numeric(16);
 
@@ -40,8 +42,6 @@ export async function newCardData(
   const cardholderName = await formatName(fullName);
 
   const expirationDate = moment(moment().add(5, "years")).format("MM/YYYY");
-
-  const securityCode = cryptr.encrypt(faker.random.numeric(3));
 
   const cardData = {
     employeeId: employee.id,
@@ -66,35 +66,13 @@ export async function activateCard(
   securityCode: number,
   password: string
 ) {
-  const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
   const passwordCrypt = bcrypt.hashSync(password, 10);
-  const dateNow = moment().format("MM/YYYY");
 
   const card = await findCardById(cardId);
 
-  const verifySecurityCode = Number(cryptr.decrypt(card.securityCode));
-  console.log(verifySecurityCode);
-
-  if (securityCode != verifySecurityCode) {
-    throw {
-      status: 401,
-      message: "Permissão negada!",
-    };
-  }
-
-  if (card.password) {
-    throw {
-      status: 403,
-      message: "Esse cartão já está ativado!",
-    };
-  }
-
-  if (card.expirationDate < dateNow) {
-    throw {
-      status: 403,
-      message: "Esse cartão expirou!",
-    };
-  }
+  verifyCardUtils.verifySecurityCodeMatch(card, securityCode);
+  verifyCardUtils.verifyIsCardActive(card);
+  verifyCardUtils.verifyCardHasExpired(card);
 
   const cardData = {
     password: passwordCrypt,
@@ -108,21 +86,9 @@ export async function viewCard(cardId: number, password: string) {
   const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
   const card = await findCardById(cardId);
 
-  if (!card.password) {
-    throw {
-      status: 403,
-      message: "Esse cartão não está ativado!",
-    };
-  }
+  verifyCardUtils.verifyIsCardInactive(card);
 
-  const checkPassword = bcrypt.compareSync(password, card.password);
-
-  if (!checkPassword) {
-    throw {
-      status: 401,
-      message: "Permissão negada!",
-    };
-  }
+  verifyCardUtils.verifyPasswordMatch(card, password);
 
   let filteredCard = await cardRepository.viewCardDetails(cardId);
   const securityCode = cryptr.decrypt(filteredCard.securityCode);
@@ -132,7 +98,7 @@ export async function viewCard(cardId: number, password: string) {
 }
 
 export async function viewTransactions(cardId: number) {
-  const card = await findCardById(cardId);
+  await findCardById(cardId);
 
   const recharges = await rechargeRepository.findByCardId(cardId);
   const payments = await paymentRepository.findByCardId(cardId);
@@ -149,31 +115,11 @@ export async function viewTransactions(cardId: number) {
 }
 
 export async function blockCard(cardId: number, password: string) {
-  const dateNow = moment().format("MM/YYYY");
-
   const card = await findCardById(cardId);
-  const checkPassword = bcrypt.compareSync(password, card.password);
 
-  if (!checkPassword) {
-    throw {
-      status: 401,
-      message: "Permissão negada!",
-    };
-  }
-
-  if (card.expirationDate < dateNow) {
-    throw {
-      status: 403,
-      message: "Esse cartão expirou!",
-    };
-  }
-
-  if (card.isBlocked) {
-    throw {
-      status: 403,
-      message: "Esse cartão já está bloqueado!",
-    };
-  }
+  verifyCardUtils.verifyPasswordMatch(card, password);
+  verifyCardUtils.verifyCardHasExpired(card);
+  verifyCardUtils.verifyIsCardBlock(card);
 
   const cardData = {
     isBlocked: true,
@@ -184,31 +130,11 @@ export async function blockCard(cardId: number, password: string) {
 }
 
 export async function unblockCard(cardId: number, password: string) {
-  const dateNow = moment().format("MM/YYYY");
-
   const card = await findCardById(cardId);
-  const checkPassword = bcrypt.compareSync(password, card.password);
 
-  if (!checkPassword) {
-    throw {
-      status: 401,
-      message: "Permissão negada!",
-    };
-  }
-
-  if (card.expirationDate < dateNow) {
-    throw {
-      status: 403,
-      message: "Esse cartão expirou!",
-    };
-  }
-
-  if (!card.isBlocked) {
-    throw {
-      status: 403,
-      message: "Esse cartão já está desbloqueado!",
-    };
-  }
+  verifyCardUtils.verifyPasswordMatch(card, password);
+  verifyCardUtils.verifyCardHasExpired(card);
+  verifyCardUtils.verifyIsCardUnblock(card);
 
   const cardData = {
     isBlocked: false,
