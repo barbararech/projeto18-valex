@@ -1,4 +1,5 @@
 import * as cardRepository from "../repositories/cardRepository.js";
+import * as businessRepository from "../repositories/businessRepository.js";
 import moment from "moment";
 import Cryptr from "cryptr";
 import bcrypt from "bcryptjs";
@@ -54,7 +55,7 @@ export function verifyIsCardActive(card: cardRepository.Card) {
   if (card.password) {
     throw {
       status: 403,
-      message: "Esse cartão já está ativado!",
+      message: "Esse cartão está ativado!",
     };
   }
 
@@ -76,7 +77,7 @@ export function verifyIsCardBlock(card: cardRepository.Card) {
   if (card.isBlocked) {
     throw {
       status: 403,
-      message: "Esse cartão já está bloqueado!",
+      message: "Esse cartão está bloqueado!",
     };
   }
 
@@ -87,7 +88,21 @@ export function verifyIsCardUnblock(card: cardRepository.Card) {
   if (!card.isBlocked) {
     throw {
       status: 403,
-      message: "Esse cartão já está desbloqueado!",
+      message: "Esse cartão está desbloqueado!",
+    };
+  }
+
+  return;
+}
+
+export async function CardAndBusinessHaveSameType(
+  card: cardRepository.Card,
+  business: businessRepository.Business
+) {
+  if (business.type !== card.type) {
+    throw {
+      status: 400,
+      message: "Este estabelecimento não é do mesmo tipo do cartão!",
     };
   }
 
