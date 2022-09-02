@@ -23,12 +23,12 @@ export async function newCard(
 
   await findEmployeeCardByType(type, employeeId);
 
-  await newCardData(company, employee, type);
+  await insertNewCardData(company, employee, type);
 
   return;
 }
 
-export async function newCardData(
+export async function insertNewCardData(
   company: companyRepository.Company,
   employee: employeeRepository.Employee,
   type: cardRepository.TransactionTypes

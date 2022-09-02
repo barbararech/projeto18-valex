@@ -73,7 +73,8 @@ export async function viewCardDetails(id: number) {
         "number", 
         "cardholderName", 
         "expirationDate",
-        "securityCode"
+        "securityCode",
+        "type"
       FROM cards 
       WHERE id=$1`,
     [id]
