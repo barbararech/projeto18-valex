@@ -183,6 +183,41 @@ export async function blockCard(cardId: number, password: string) {
   return;
 }
 
+export async function unblockCard(cardId: number, password: string) {
+  const dateNow = moment().format("MM/YYYY");
+
+  const card = await findCardById(cardId);
+  const checkPassword = bcrypt.compareSync(password, card.password);
+
+  if (!checkPassword) {
+    throw {
+      status: 401,
+      message: "Permissão negada!",
+    };
+  }
+
+  if (card.expirationDate < dateNow) {
+    throw {
+      status: 403,
+      message: "Esse cartão expirou!",
+    };
+  }
+
+  if (!card.isBlocked) {
+    throw {
+      status: 403,
+      message: "Esse cartão já está desbloqueado!",
+    };
+  }
+
+  const cardData = {
+    isBlocked: false,
+  };
+
+  await cardRepository.update(cardId, cardData);
+  return;
+}
+
 export async function findEmployeeCardByType(
   type: cardRepository.TransactionTypes,
   employeeId: number

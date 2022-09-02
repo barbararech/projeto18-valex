@@ -32,5 +32,10 @@ router.put(
   cardController.blockCard
 );
 
+router.put(
+  "/unblockcards/:cardid",
+  middleware(cardSchemas.viewCardSchema),
+  cardController.unblockCard
+);
 
 export default router;
