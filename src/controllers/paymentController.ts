@@ -6,5 +6,5 @@ export async function newPayment(req: Request, res: Response) {
   const businessId = Number(req.params.businessid);
 
   await paymentServices.newPayment(cardId, cardPassword, businessId, amount);
-  return res.sendStatus(201);
+  return res.status(201).send("Pagamento efetuado com sucesso!");
 }

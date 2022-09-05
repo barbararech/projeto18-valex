@@ -18,18 +18,20 @@ export async function newCard(
   type: cardRepository.TransactionTypes,
   companyKey: string
 ) {
-  const company = await companyServices.findCompany(companyKey);
+  const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
+  await companyServices.findCompany(companyKey);
   const employee = await employeeServices.findEmployee(employeeId);
 
   await findEmployeeCardByType(type, employeeId);
 
-  await insertNewCardData(company, employee, type);
+  const cardData = await insertNewCardData(employee, type);
+  const securityCode = cryptr.decrypt(cardData.securityCode);
+  cardData["securityCode"] = securityCode;
 
-  return;
+  return { cardData };
 }
 
 export async function insertNewCardData(
-  company: companyRepository.Company,
   employee: employeeRepository.Employee,
   type: cardRepository.TransactionTypes
 ) {
@@ -58,7 +60,7 @@ export async function insertNewCardData(
 
   await cardRepository.insert(cardData);
 
-  return;
+  return cardData;
 }
 
 export async function activateCard(

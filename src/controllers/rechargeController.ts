@@ -7,5 +7,5 @@ export async function newRecharge(req: Request, res: Response) {
   const companyKey = res.locals.id;
 
   await rechargeServices.newRecharge(cardId, amount, companyKey);
-  return res.sendStatus(201);
+  return res.status(201).send("Recarga efetuada com sucesso!");
 }
