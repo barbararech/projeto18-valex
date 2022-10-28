@@ -1,8 +1,25 @@
+# <p align = "center"> Valex </p>
 
-# valex
+<p align="center">
+   <img src="https://cdn.dribbble.com/users/2367860/screenshots/16859451/media/0aa548e308861ab92c95aabc7bcf1802.png?compress=1&resize=1000x750&vertical=top" width=600/>
+</p>
+
+<p align = "center">
+   <img src="https://img.shields.io/badge/author-Bárbara_Rech-4dae71?style=flat-square" />
+   <img src="https://img.shields.io/github/languages/count/barbararech/valex?color=4dae71&style=flat-square" />
+</p>
+
+
+##  :clipboard: Description
 
 An API to manage company benefit cards. You can create, activate, block and unblock cards, view transactions
 and also simulate payments and recharges!
+
+## :computer: Technologies
+  - Node.js
+  - Typescript
+  - Joi
+  - PostgreSQL
 
 ## API Reference
 
